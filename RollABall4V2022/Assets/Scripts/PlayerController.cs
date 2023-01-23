@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
     public LayerMask groundLayer;
 
     public float jumpForce;
+
+    public float damageForceMultiplier = 0.2f;
     
     private GameControls _gameControls;
     private PlayerInput _playerInput;
@@ -165,13 +167,20 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, Vector3 [Optional]damageDirection)
     {
         _currentHealth -= damage;
         if (_currentHealth <= 0)
         {
             _currentHealth = 0;
             // alguma funcao no game manager pra indicar que o jogador morreu
+        }
+        else 
+        {
+            Vector3 damageDirection =  damageOrigin - transform.position;
+            _rigidbody.AddForce(damageDirection * (float)damage/10f, ForceMode.Impulse);
+            damageDirection = damageDirection.normalized;
+            damageDirection.y = 1;
         }
     }
 
@@ -185,7 +194,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Spikes"))
         {
-            TakeDamage(5);
+            TakeDamage(5, collision.contacts[0].point);
         }
     }
 }

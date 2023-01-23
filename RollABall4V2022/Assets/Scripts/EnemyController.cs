@@ -33,7 +33,7 @@ public class EnemyController : MonoBehaviour
     private float _currentMoveSpeed;
 
     private Animator _enemyFSM;
-
+    // mapeia obstaculo
     private NavMeshAgent _navMeshAgent;
 
     private SphereCollider _sphereCollider;
@@ -52,7 +52,7 @@ public class EnemyController : MonoBehaviour
         _moveSpeed = enemyData.moveSpeed;
         _maxHealthPoints = enemyData.maxHealthPoints;
 
-        //_enemyMesh = Instantiate(enemyData.enemyMesh, transform);
+        
 
         _followDistance = enemyData.followDistance;
         _returnDistance = enemyData.returnDistance;
@@ -70,27 +70,27 @@ public class EnemyController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // Questao 1
+        // primeiro ponto de patrulha
         _currentPatrolIndex = 0;
 
         _currentPatrolPoint = myPatrolRoute.patrolRoutePoints[_currentPatrolIndex];
     }
 
-    public void Patrulhar()
+    public void Patrulha()
     {
         if(myPatrolRoute.patrolRoutePoints.Count > 0)
         {
-            // muda o destino do objeto navMashAgent para a posi��o guardada na lista de transforms de acordo com cada indice
-            // Questao 4
+            
+            //movimenta o inimigo
             _navMeshAgent.destination = myPatrolRoute.patrolRoutePoints[_currentPatrolIndex].position;
-            // Atualiza o indice para pegar a proxima posi��o da lista
-            // Quetao 3
+            // incrementa o array, indo para a proxima posição
             _currentPatrolIndex++;
 
-            // Verifica se a lista chegou ao fim atravez do indice atual e o tamanho da lista 
-            if(_currentPatrolIndex == myPatrolRoute.patrolRoutePoints.Count)
+            // verifica se chegou a quarta posição
+            if(_currentPatrolIndex == myPatrolRoute.patrolRoutePoints.Count
+            )
             {
-                // Reinicia a lista atraves do indice
+                // seta de volta para a posição zero
                 _currentPatrolIndex = 0;
             }
         }
@@ -108,13 +108,12 @@ public class EnemyController : MonoBehaviour
             _enemyFSM.SetFloat("ReturnDistance",
                 Vector3.Distance(transform.position, _currentPatrolPoint.position));
         }
-        // verifica a distancia entre o Inimigo e o ponto de patrulha, de for menor que 0.1 a funcao Patrulhar � chamada  
-        // Questao 2
+        // distancia do ponto de patrulha e inimigo
         if (_enemyFSM.GetCurrentAnimatorStateInfo(0).IsName("Patrol"))
         {
             if (_navMeshAgent.remainingDistance < 0.1f)
             {
-                Patrulhar();
+                Patrulha();
             }
         }
     }
@@ -132,7 +131,7 @@ public class EnemyController : MonoBehaviour
     }
 
     public void SetDestinationToPatrol()
-    {
+    {   //passa a posição do atual ponto do array
         _navMeshAgent.SetDestination(_currentPatrolPoint.position);
         _currentPatrolIndex = 0;
     }
@@ -150,6 +149,19 @@ public class EnemyController : MonoBehaviour
             _enemyFSM.SetTrigger("OnPlayerEntered");
             Debug.Log("Jogador entrou na area");
         }
+    }
+
+    private IEnumerator DoAttack()
+    {
+        _meshRenderer.material.color = attackColor;
+        _playerTransform.GetComponent<PlayerController>().TakeDamage(10, Transform.position)
+        _currentCoolDownTime = AttackCoolDown + 1f;
+        yield return new WaitForSeconds(1f);
+        _meshRenderer.material.color = cooldownColor;
+    }
+    private void Attack()
+    {
+        StartCourotine("DoAttack")
     }
 
     private void OnTriggerExit(Collider other)
